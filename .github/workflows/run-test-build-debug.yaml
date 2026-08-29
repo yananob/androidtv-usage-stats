@@ -1,0 +1,61 @@
+name: Run test & Android Build (debug)
+on:
+  pull_request:
+    branches:
+      - test
+    types:
+      - 'opened'
+      - 'synchronize'
+      - 'edited'
+      - 'reopened'
+  workflow_dispatch:
+
+concurrency:
+  group: {{VALUES_APP_NAME}}-build-debug
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Run Tests
+        run: ./gradlew test
+
+      - name: Build with Gradle
+        run: >
+          ./gradlew assembleDebug
+
+      - id: 'upload-apk'
+        uses: actions/upload-artifact@v6
+        with:
+          name: app-apk-debug
+          path: app/build/outputs/apk/debug/*.apk # 保存したいファイルのパス
+          retention-days: 2
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifactUrl = "${{ steps.upload-apk.outputs.artifact-url }}";
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `### 📦 Build Artifact (Debug)\n\nDownload the APK here: [app-apk-debug](${artifactUrl})`
+            })

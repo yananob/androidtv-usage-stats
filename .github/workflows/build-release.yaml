@@ -1,0 +1,78 @@
+aname: Android Build & Release (release)
+on:
+  # push:
+  #   branches:
+  #     - main
+  # MEMO: どのみちビルドしたファイルをinternalテストするので、releaseでビルドしてGPlayに登録してテストする
+  push:
+    branches:
+      - test
+  workflow_dispatch:
+    inputs:
+      aab_path:
+        description: 'Path to the AAB file'
+        required: true
+        default: 'app/build/outputs/bundle/release/app-release.aab'
+
+concurrency:
+  group: {{VALUES_APP_NAME}}-build-release
+  cancel-in-progress: true
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle' # ここでキャッシュ効かせるのがクリーンな鉄則！
+
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.ANDROID_SIGNING_KEY }}" | base64 --decode > release.jks
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+        
+      # - name: Build apk with Gradle
+      #   run: >
+      #     ./gradlew assembleRelease
+      #     -Pandroid.injected.signing.store.file=$(pwd)/release.jks
+      #     -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
+      #     -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEY_ALIAS }}
+      #     -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
+      # - id: 'upload-apk'
+      #   uses: actions/upload-artifact@v6
+      #   with:
+      #     name: app-apk-release
+      #     path: app/build/outputs/apk/release/*.apk # 保存したいファイルのパス
+      #     retention-days: 2 # 何日間保存するか（デフォルトは90日やけど、自分用なら短くてOK）
+
+      # AABのビルド実行
+      - name: Build aab with Gradle
+        run: ./gradlew bundleRelease
+
+     # AABのビルド後にこれを追加
+      - name: Sign AAB
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          releaseFiles: ${{ inputs.aab_path || 'app/build/outputs/bundle/release/app-release.aab' }}
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+          packageName: io.github.yananob.{{VALUES_APP_NAME}}
+          tracks: internal
