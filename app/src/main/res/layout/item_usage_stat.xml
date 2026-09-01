@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <!-- アプリ表示名 -->
+    <TextView
+        android:id="@+id/textAppName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        tools:text="ABEMA" />
+
+    <!-- パッケージ名 -->
+    <TextView
+        android:id="@+id/textPackageName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#888888"
+        android:textSize="16sp"
+        tools:text="tv.abema" />
+
+    <!-- 最終使用時刻 -->
+    <TextView
+        android:id="@+id/textLastTimeUsed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textSize="16sp"
+        tools:text="最終使用: 2026/08/29 13:42" />
+
+    <!-- 利用時間 -->
+    <TextView
+        android:id="@+id/textTotalTimeInForeground"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        tools:text="利用時間: 1時間23分" />
+
+</LinearLayout>

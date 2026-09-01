@@ -6,11 +6,7 @@ plugins {
 
 android {
     namespace = "io.github.yananob.template_android"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     val runNumber = System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 1
 
@@ -27,11 +23,11 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".test"
-            resValue("string", "app_name", "\"_template-android-test\"")
+            resValue("string", "app_name", "\"UsageStats TV Test\"")
         }
         release {
             isMinifyEnabled = false
-            resValue("string", "app_name", "\"_template-android\"")
+            resValue("string", "app_name", "\"UsageStats TV Test\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -42,17 +38,22 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
+        viewBinding = true
         resValues = true
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
 }
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
